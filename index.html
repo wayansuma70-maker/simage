@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JurnalGuru — SIMAGE</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23111%22/><text x=%2250%22 y=%2268%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22>J</text></svg>">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<section id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark">JG</span>
+      <div>
+        <div class="brand-name">JURNALGURU</div>
+        <div class="brand-sub">SIMAGE — Sistem Informasi Manajemen Administrasi Guru</div>
+      </div>
+    </div>
+    <h1>Masuk ke Akun</h1>
+    <p class="muted">Gunakan email & kata sandi yang terdaftar di sekolah Anda.</p>
+    <form id="loginForm">
+      <label class="field">
+        <span>Email</span>
+        <input type="email" id="loginEmail" required placeholder="nama@sekolah.sch.id" autocomplete="username">
+      </label>
+      <label class="field">
+        <span>Kata Sandi</span>
+        <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
+      </label>
+      <div id="loginError" class="form-error" hidden></div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginSubmit">MASUK</button>
+    </form>
+    <div class="login-demo">
+      <div class="label-sm">AKUN DEMO</div>
+      <code>admin@sekolah.sch.id / admin123</code> (Admin)<br>
+      <code>kepsek@sekolah.sch.id / kepsek123</code> (Kepsek)<br>
+      <code>bambang@sekolah.sch.id / guru123</code> (Wali Kelas)
+    </div>
+  </div>
+</section>
+
+<!-- ======================= APP SHELL ======================= -->
+<div id="appShell" class="app-shell" hidden>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">JG</span>
+      <div>
+        <div class="brand-name">JURNALGURU</div>
+        <div class="brand-ver label-sm">SIMAGE v1.0</div>
+      </div>
+    </div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="sidebar-foot">
+      <div class="status-ledger label-sm">STATUS LEDGER <b id="ledgerStatus">SYNCED</b></div>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Menu">☰</button>
+      <div class="topbar-title" id="pageTitle">BERANDA</div>
+      <div class="topbar-right">
+        <span class="pill" id="semesterPill">GANJIL 2024/2025</span>
+        <div class="user-box">
+          <div class="user-name" id="userName">—</div>
+          <div class="user-role label-sm" id="userRole">—</div>
+        </div>
+        <button class="btn btn-ghost" id="logoutBtn" title="Keluar">⎋</button>
+      </div>
+    </header>
+    <main id="pageContainer" class="page-container"></main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script defer src="js/config.js"></script>
+<script defer src="js/api.js"></script>
+<script defer src="js/ui.js"></script>
+<script defer src="js/router.js"></script>
+<script defer src="js/pages/beranda.js"></script>
+<script defer src="js/pages/jurnal.js"></script>
+<script defer src="js/pages/absensi.js"></script>
+<script defer src="js/pages/nilai.js"></script>
+<script defer src="js/pages/sikap.js"></script>
+<script defer src="js/pages/laporan.js"></script>
+<script defer src="js/pages/master.js"></script>
+<script defer src="js/pages/log.js"></script>
+<script defer src="js/pages/notifikasi.js"></script>
+<script defer src="js/pages/crm.js"></script>
+<script defer src="js/pages/migrasi.js"></script>
+<script defer src="js/app.js"></script>
+</body>
+</html>
