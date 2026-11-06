@@ -205,3 +205,4 @@ tbody tr:hover{background:var(--c-low);}
 .badge-wa-ya{background:var(--ink); color:#fff; border-radius:var(--radius-pill); padding:1px 8px; font-size:10px; font-family:var(--font-mono);}
 .badge-wa-tidak{border:1px solid var(--c-highest); border-radius:var(--radius-pill); padding:1px 8px; font-size:10px; font-family:var(--font-mono); color:var(--ink-meta);}
 .badge-wa-cek{border:1px dashed var(--c-highest); border-radius:var(--radius-pill); padding:1px 8px; font-size:10px; font-family:var(--font-mono); color:var(--ink-meta);}
+[hidden]{display:none !important;}
