@@ -23,6 +23,7 @@ const NAV_MENU = [
     { page: 'crm', label: 'CRM Kontak', icon: '☍', roles: ['Admin', 'Kepsek', 'Wakasek'] }
   ]},
   { group: 'SISTEM', items: [
+    { page: 'pengaturan', label: 'Pengaturan Sekolah', icon: '⚙', roles: ['Admin'] },
     { page: 'migrasi', label: 'Migrasi Data Lama', icon: '⇄', roles: ['Admin'] }
   ]}
 ];

@@ -12,6 +12,7 @@ registerPage('jurnal', {
         <option value="Disetujui">Disetujui</option>
         <option value="Revisi">Revisi</option>
       </select>
+      <button class="btn" id="jurnalCetakBtn">🖨 CETAK</button>
       <button class="btn btn-primary" id="jurnalTambahBtn">+ TAMBAH JURNAL</button>
     </div>
     <div id="jurnalList">${skeleton(5)}</div>
@@ -21,6 +22,7 @@ registerPage('jurnal', {
     el.querySelector('#jurnalTambahBtn').hidden = isSup;
     el.querySelector('#jurnalFilterStatus').addEventListener('change', () => loadJurnal(el));
     el.querySelector('#jurnalTambahBtn').addEventListener('click', () => openJurnalForm());
+    el.querySelector('#jurnalCetakBtn').addEventListener('click', () => cetakJurnal());
     loadJurnal(el);
   }
 });
@@ -154,3 +156,12 @@ function fileToBase64(file) {
   });
 }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+function cetakJurnal() {
+  const rows = window._jurnalCache || [];
+  if (!rows.length) { showToast('Tidak ada data jurnal untuk dicetak.', 'error'); return; }
+  const html = `<table><thead><tr><th>No</th><th>Tanggal</th><th>Guru</th><th>Kelas</th><th>Mapel</th><th>Jam</th><th>Materi</th><th>Status</th></tr></thead><tbody>
+    ${rows.map((j, i) => `<tr><td>${i + 1}</td><td>${fmtDate(j.Tanggal)}</td><td>${esc(j.NamaGuru)}</td><td>${esc(j.NamaKelas)}</td><td>${esc(j.NamaMapel)}</td><td>${esc(j.JamKe)}</td><td>${esc(j.Materi)}</td><td>${esc(j.StatusApproval)}</td></tr>`).join('')}
+    </tbody></table>`;
+  cetakDenganKop('Jurnal Pembelajaran Harian (KBM)', html);
+}

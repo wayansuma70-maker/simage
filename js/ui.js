@@ -58,6 +58,49 @@ function closeModal() { const m = document.getElementById('activeModal'); if (m)
 
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
+// ------------------------------------------------------------
+// Cetak dengan kop surat sekolah (logo + nama + alamat + semester)
+// ------------------------------------------------------------
+function getPengaturanCache() {
+  const c = Store.get(userKey('pengaturan'));
+  return (c && c.data) || {};
+}
+
+function cetakDenganKop(judul, kontenHtml) {
+  const p = getPengaturanCache();
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Mohon izinkan pop-up untuk mencetak.', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(judul)}</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;padding:28px;color:#111;}
+      .kop{display:flex;align-items:center;gap:16px;border-bottom:3px solid #111;padding-bottom:14px;margin-bottom:18px;}
+      .kop img{height:64px;width:64px;object-fit:contain;}
+      .kop h1{font-size:18px;margin:0;}
+      .kop p{font-size:12px;margin:2px 0 0;color:#444;}
+      h2{font-size:15px;margin:18px 0 10px;}
+      table{width:100%;border-collapse:collapse;font-size:12px;}
+      th,td{border:1px solid #999;padding:6px 8px;text-align:left;}
+      th{background:#eee;}
+      .ttd{margin-top:50px;display:flex;justify-content:flex-end;}
+      .ttd div{text-align:center;width:220px;}
+      .ttd .garis{margin-top:60px;border-top:1px solid #111;}
+      @media print{ .no-print{display:none;} }
+    </style></head><body>
+    <div class="kop">
+      ${p.logoUrl ? `<img src="${esc(p.logoUrl)}">` : ''}
+      <div>
+        <h1>${esc(p.namaSekolah || 'Nama Sekolah')}</h1>
+        <p>${esc(p.alamat || '')}</p>
+        <p>Semester ${esc(p.semester || '')} — Tahun Ajaran ${esc(p.tahunAjaran || '')}</p>
+      </div>
+    </div>
+    <h2>${esc(judul)}</h2>
+    ${kontenHtml}
+    <script>window.onload = function(){ window.print(); };<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
 function selectOptions(list, valueKey, labelKey, selected) {
   return list.map(o => `<option value="${esc(o[valueKey])}" ${String(o[valueKey]) === String(selected) ? 'selected' : ''}>${esc(o[labelKey])}</option>`).join('');
 }

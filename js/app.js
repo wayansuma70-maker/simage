@@ -13,6 +13,21 @@ function showApp() {
   document.getElementById('userRole').textContent = AppState.peran;
   renderNav();
   route();
+  muatPengaturanSekolah();
+}
+
+function terapkanPengaturanSekolah(p) {
+  if (!p) return;
+  const pill = document.getElementById('semesterPill');
+  if (pill && p.semester && p.tahunAjaran) pill.textContent = p.semester.toUpperCase() + ' ' + p.tahunAjaran;
+  const label = document.getElementById('sidebarSchoolLabel');
+  if (label) label.textContent = p.namaSekolah || 'SIMAGE v1.0';
+  const mark = document.getElementById('sidebarBrandMark');
+  if (mark) mark.innerHTML = p.logoUrl ? `<img src="${p.logoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : 'JG';
+}
+
+function muatPengaturanSekolah() {
+  swr('pengaturan', 'pengaturan.get', {}, terapkanPengaturanSekolah, { fresh: 300000 });
 }
 
 async function doLogin(email, password) {
