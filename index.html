@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -38,6 +39,10 @@
       <div id="loginError" class="form-error" hidden></div>
       <button type="submit" class="btn btn-primary btn-block" id="loginSubmit">MASUK</button>
     </form>
+    <div id="googleLoginArea" hidden>
+      <div class="login-divider"><span>atau</span></div>
+      <div id="googleBtn" style="display:flex;justify-content:center;"></div>
+    </div>
     <div class="login-demo">
       <div class="label-sm">AKUN DEMO</div>
       <code>admin@sekolah.sch.id / admin123</code> (Admin)<br>
