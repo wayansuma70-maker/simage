@@ -1,6 +1,7 @@
 // ============================================================
 // pages/master.js — Data Master (PRD §5.6, khusus Admin)
 // + Impor Excel/CSV & Unduh Format Template
+// + Tab Penugasan Mengajar (guru mapel → kelas, di luar wali kelas)
 // ============================================================
 registerPage('master', {
   title: 'Data Master',
@@ -12,6 +13,7 @@ registerPage('master', {
       <button data-e="siswa">SISWA</button>
       <button data-e="kelas">KELAS</button>
       <button data-e="mapel">MAPEL</button>
+      <button data-e="penugasan">PENUGASAN MENGAJAR</button>
     </div>
     <div class="toolbar">
       <input class="search-box" style="height:38px;border:1px solid var(--c-highest);padding:0 10px;" id="masterSearch" placeholder="Cari...">
@@ -27,10 +29,12 @@ registerPage('master', {
     const load = () => loadMaster(el, entitas);
     el.querySelectorAll('#masterTabs button').forEach(b => b.addEventListener('click', () => {
       el.querySelectorAll('#masterTabs button').forEach(x => x.classList.remove('active'));
-      b.classList.add('active'); entitas = b.dataset.e; load();
+      b.classList.add('active'); entitas = b.dataset.e;
+      el.querySelector('#masterSearch').value = '';
+      load();
     }));
     el.querySelector('#masterSearch').addEventListener('input', debounce(() => renderMasterTable(el, entitas, el.querySelector('#masterSearch').value), 250));
-    el.querySelector('#masterTambahBtn').addEventListener('click', () => openMasterForm(entitas));
+    el.querySelector('#masterTambahBtn').addEventListener('click', () => entitas === 'penugasan' ? openPenugasanForm(el) : openMasterForm(entitas));
     el.querySelector('#masterUnduhFormat').addEventListener('click', () => unduhFormatTemplate(entitas));
     el.querySelector('#masterImportBtn').addEventListener('click', () => el.querySelector('#masterFile').click());
     el.querySelector('#masterFile').addEventListener('change', (e) => handleFileImport(e, entitas, load));
@@ -44,10 +48,11 @@ const MASTER_FIELDS = {
   siswa: [['Nama', 'text'], ['NIS', 'text'], ['Kelas', 'text'], ['ID_Kelas', 'text'], ['ID_WaliKelas', 'text'],
     ['JenisKelamin', 'select', ['L', 'P']], ['NoHPWali', 'tel'], ['EmailWali', 'email']],
   kelas: [['NamaKelas', 'text'], ['ID_WaliKelas', 'text'], ['TahunAjaran', 'text'], ['Fase', 'text']],
-  mapel: [['NamaMapel', 'text'], ['Kelompok', 'text'], ['KKM', 'number']]
+  mapel: [['NamaMapel', 'text'], ['Kelompok', 'text'], ['KKM', 'number']],
+  penugasan: [['NamaGuru', 'text'], ['NamaKelas', 'text'], ['NamaMapel', 'text']] // tampilan saja, diisi lewat form khusus
 };
-const MASTER_KEY = { guru: 'ID_Guru', siswa: 'ID_Siswa', kelas: 'ID_Kelas', mapel: 'ID_Mapel' };
-const MASTER_LABEL = { guru: 'Guru', siswa: 'Siswa', kelas: 'Kelas', mapel: 'Mapel' };
+const MASTER_KEY = { guru: 'ID_Guru', siswa: 'ID_Siswa', kelas: 'ID_Kelas', mapel: 'ID_Mapel', penugasan: 'ID_Tugas' };
+const MASTER_LABEL = { guru: 'Guru', siswa: 'Siswa', kelas: 'Kelas', mapel: 'Mapel', penugasan: 'Penugasan Mengajar' };
 // Baris contoh untuk memandu admin mengisi template dengan benar
 const MASTER_CONTOH = {
   guru: { Nama: 'Siti Aminah, M.Pd.', NIP: '198705192011012014', Email: 'siti.aminah@sekolah.sch.id', NoHP: '081234567890', Mapel: 'Bahasa Indonesia', Peran: 'Guru' },
@@ -58,19 +63,45 @@ const MASTER_CONTOH = {
 
 function loadMaster(el, entitas) {
   el.querySelector('#masterBody').innerHTML = skeleton(6);
+  const isPenugasan = entitas === 'penugasan';
+  el.querySelector('#masterUnduhFormat').style.display = isPenugasan ? 'none' : '';
+  el.querySelector('#masterImportBtn').style.display = isPenugasan ? 'none' : '';
+  if (isPenugasan) { loadPenugasan(el); return; }
   swr('master:' + entitas, 'master.list', { entitas }, (rows) => { window['_master_' + entitas] = rows; renderMasterTable(el, entitas, el.querySelector('#masterSearch').value); }, { fresh: 15000 });
+}
+
+async function loadPenugasan(el) {
+  const [tgs, guru, kelas, mapel] = await Promise.all([
+    api('master.list', { entitas: 'penugasan' }), api('master.list', { entitas: 'guru' }),
+    api('master.list', { entitas: 'kelas' }), api('master.list', { entitas: 'mapel' })
+  ]);
+  if (!tgs.success) { el.querySelector('#masterBody').innerHTML = emptyState(tgs.message); return; }
+  const gMap = {}, kMap = {}, mMap = {};
+  (guru.data || []).forEach(g => gMap[g.ID_Guru] = g.Nama);
+  (kelas.data || []).forEach(k => kMap[k.ID_Kelas] = k.NamaKelas);
+  (mapel.data || []).forEach(m => mMap[m.ID_Mapel] = m.NamaMapel);
+  window._master_penugasan = tgs.data.map(r => Object.assign({}, r, {
+    NamaGuru: gMap[r.ID_Guru] || r.ID_Guru, NamaKelas: kMap[r.ID_Kelas] || r.ID_Kelas, NamaMapel: mMap[r.ID_Mapel] || r.ID_Mapel
+  }));
+  window._master_opsi_guru = guru.data || []; window._master_opsi_kelas = kelas.data || []; window._master_opsi_mapel = mapel.data || [];
+  renderMasterTable(el, 'penugasan', el.querySelector('#masterSearch').value);
 }
 
 function renderMasterTable(el, entitas, q) {
   let rows = window['_master_' + entitas] || [];
   if (q) { const ql = q.toLowerCase(); rows = rows.filter(r => JSON.stringify(r).toLowerCase().includes(ql)); }
-  if (!rows.length) { el.querySelector('#masterBody').innerHTML = emptyState('Belum ada data. Gunakan "Unduh Format" untuk mulai mengisi lewat Excel.'); return; }
+  if (!rows.length) {
+    el.querySelector('#masterBody').innerHTML = emptyState(entitas === 'penugasan'
+      ? 'Belum ada penugasan. Guru mapel tanpa penugasan tidak akan melihat kelas di menu Jurnal/Absensi/Nilai, kecuali ia wali kelas.'
+      : 'Belum ada data. Gunakan "Unduh Format" untuk mulai mengisi lewat Excel.');
+    return;
+  }
   const cols = MASTER_FIELDS[entitas].map(f => f[0]);
   el.querySelector('#masterBody').innerHTML = `<div class="card"><div class="table-wrap"><table><thead><tr>
       <th>ID</th>${cols.map(c => `<th>${c}</th>`).join('')}<th></th>
     </tr></thead><tbody>
       ${rows.map(r => `<tr><td class="mono">${esc(r[MASTER_KEY[entitas]])}</td>${cols.map(c => `<td>${esc(r[c])}</td>`).join('')}
-        <td><button class="btn btn-sm" onclick='openMasterForm("${entitas}", ${JSON.stringify(r).replace(/'/g, "&#39;")})'>EDIT</button></td></tr>`).join('')}
+        <td><button class="btn btn-sm" onclick='${entitas === "penugasan" ? `openPenugasanForm(document.querySelector(".page[data-page=master]"), ${JSON.stringify(r).replace(/'/g, "&#39;")})` : `openMasterForm("${entitas}", ${JSON.stringify(r).replace(/'/g, "&#39;")})`}'>EDIT</button></td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
 
@@ -97,6 +128,36 @@ function openMasterForm(entitas, data) {
     const btn = e.target.querySelector('button'); btn.disabled = true;
     const res = await api('master.save', { entitas, id: data ? data[MASTER_KEY[entitas]] : '', data: payload });
     if (res.success) { showToast(res.message); closeModal(); Store.del(userKey('master:' + entitas)); route(); }
+    else { showToast(res.message, 'error'); btn.disabled = false; }
+  });
+}
+
+// ------------------------------------------------------------
+// Form khusus Penugasan Mengajar (dropdown nama, bukan isi ID manual)
+// ------------------------------------------------------------
+function openPenugasanForm(el, data) {
+  const guruList = window._master_opsi_guru || [];
+  const kelasList = window._master_opsi_kelas || [];
+  const mapelList = window._master_opsi_mapel || [];
+  const isEdit = !!data;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>${isEdit ? 'Edit' : 'Tambah'} Penugasan Mengajar</h3>
+    <p class="muted">Guru mapel yang ditugaskan mengajar di suatu kelas akan melihat kelas itu di menu Jurnal, Absensi, dan Nilai — meski bukan wali kelasnya.</p>
+    <form id="penugasanForm" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+      <label class="field"><span>Guru *</span><select name="ID_Guru" required>${selectOptions(guruList, 'ID_Guru', 'Nama', data ? data.ID_Guru : '')}</select></label>
+      <label class="field"><span>Kelas *</span><select name="ID_Kelas" required>${selectOptions(kelasList, 'ID_Kelas', 'NamaKelas', data ? data.ID_Kelas : '')}</select></label>
+      <label class="field"><span>Mapel *</span><select name="ID_Mapel" required>${selectOptions(mapelList, 'ID_Mapel', 'NamaMapel', data ? data.ID_Mapel : '')}</select></label>
+      <button type="submit" class="btn btn-primary btn-block">SIMPAN</button>
+    </form>
+  `);
+  document.getElementById('penugasanForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const payload = {}; fd.forEach((v, k) => payload[k] = v);
+    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const res = await api('master.save', { entitas: 'penugasan', id: data ? data.ID_Tugas : '', data: payload });
+    if (res.success) { showToast(res.message); closeModal(); loadPenugasan(el); }
     else { showToast(res.message, 'error'); btn.disabled = false; }
   });
 }

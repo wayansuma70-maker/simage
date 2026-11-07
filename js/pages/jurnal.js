@@ -42,7 +42,7 @@ function renderJurnalList(el, rows) {
         <td>${esc(j.NamaKelas)}</td>
         <td>${esc(j.NamaMapel)}</td>
         <td class="mono">${esc(j.JamKe)}</td>
-        <td>${esc((j.Materi || '').slice(0, 50))}</td>
+        <td>${esc((j.Materi || '').slice(0, 50))} ${j.FotoURL ? '📷' : ''}</td>
         <td>${statusPill(j.StatusApproval)}</td>
         <td>${isSup && j.StatusApproval === 'Menunggu Approval' ? `<button class="btn btn-sm" onclick="openJurnalApprove('${j.ID_Jurnal}')">PERIKSA</button>` : `<button class="btn btn-sm btn-ghost" onclick="openJurnalDetail('${j.ID_Jurnal}')">DETAIL</button>`}</td>
       </tr>`).join('')}
@@ -60,6 +60,7 @@ function openJurnalDetail(id) {
     <div class="card-flat" style="margin-top:10px;"><b>Materi:</b> ${esc(j.Materi)}<br><b>Metode:</b> ${esc(j.Metode) || '-'}</div>
     <p style="margin-top:10px;">Status: ${statusPill(j.StatusApproval)}</p>
     ${j.CatatanKepsek ? `<p class="muted">Catatan Kepsek: ${esc(j.CatatanKepsek)}</p>` : ''}
+    ${j.FotoURL ? `<div style="margin-top:10px;"><div class="label-sm" style="margin-bottom:4px;">FOTO KEGIATAN KBM</div><img src="${esc(j.FotoURL)}" style="max-width:100%;border-radius:10px;border:1px solid var(--c-high);"></div>` : ''}
   `);
 }
 
@@ -105,14 +106,25 @@ function openJurnalForm() {
       <label class="field"><span>Materi Pokok & Aktivitas KBM *</span><textarea id="jMateri" required></textarea></label>
       <label class="field"><span>Metode/Model Pembelajaran</span><input id="jMetode"></label>
       <label class="field"><span>Catatan Khusus (opsional)</span><textarea id="jCatatan"></textarea></label>
+      <label class="field"><span>📷 Foto Kegiatan KBM (opsional, maks 5MB)</span>
+        <input type="file" id="jFoto" accept="image/*" capture="environment">
+      </label>
+      <div id="jFotoPreview"></div>
       <button type="submit" class="btn btn-primary btn-block">KIRIM UNTUK APPROVAL</button>
     </form>
   `);
+  document.getElementById('jFoto').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const prev = document.getElementById('jFotoPreview');
+    if (!file) { prev.innerHTML = ''; return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Ukuran foto maksimal 5MB.', 'error'); e.target.value = ''; prev.innerHTML = ''; return; }
+    prev.innerHTML = `<img src="${URL.createObjectURL(file)}" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--c-high);margin-top:4px;">`;
+  });
   document.getElementById('jurnalForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
     btn.disabled = true; btn.textContent = 'MENGIRIM...';
-    const res = await api('jurnal.save', {
+    const payload = {
       tanggal: document.getElementById('jTanggal').value,
       jamKe: document.getElementById('jJam').value,
       kelas: document.getElementById('jKelas').value,
@@ -120,9 +132,25 @@ function openJurnalForm() {
       materi: document.getElementById('jMateri').value,
       metode: document.getElementById('jMetode').value,
       catatan: document.getElementById('jCatatan').value
-    });
+    };
+    const fotoFile = document.getElementById('jFoto').files[0];
+    if (fotoFile) {
+      btn.textContent = 'MENGUNGGAH FOTO...';
+      try { payload.fotoBase64 = await fileToBase64(fotoFile); payload.fotoNama = fotoFile.name.replace(/\.[^.]+$/, ''); }
+      catch (err) { showToast('Gagal membaca file foto.', 'error'); btn.disabled = false; btn.textContent = 'KIRIM UNTUK APPROVAL'; return; }
+      btn.textContent = 'MENGIRIM...';
+    }
+    const res = await api('jurnal.save', payload);
     if (res.success) { showToast(res.message); closeModal(); route(); }
     else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'KIRIM UNTUK APPROVAL'; }
+  });
+}
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
