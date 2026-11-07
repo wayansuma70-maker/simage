@@ -24,7 +24,7 @@ function renderSikap(el, rows) {
         <b>${esc(r.NamaSiswa)}</b>
         <span class="pill ${r.Klasifikasi === 'Positif/Apresiasi' ? 'pill-solid' : 'pill-outline'}">${esc(r.Klasifikasi)}</span>
       </div>
-      <div class="muted" style="margin:4px 0;">${esc(r.Kelas)} · ${fmtDate(r.Tanggal)} ${r.DimensiP5 ? '· Dimensi P5: ' + esc(r.DimensiP5) : ''}</div>
+      <div class="muted" style="margin:4px 0;">${esc(r.Kelas)} · ${fmtDate(r.Tanggal)} ${r.DimensiP5 ? '· Dimensi Profil Lulusan: ' + esc(r.DimensiP5) : ''}</div>
       <div>${esc(r.Deskripsi)}</div>
       ${r.TindakLanjut ? `<div class="muted" style="margin-top:6px;"><b>Tindak lanjut:</b> ${esc(r.TindakLanjut)}</div>` : ''}
     </div>`).join('');
@@ -46,7 +46,19 @@ function openSikapForm() {
           <option value="Perlu Pembinaan">Perlu Pembinaan</option>
         </select>
       </label>
-      <label class="field"><span>Dimensi Profil Pelajar Pancasila</span><input id="sDimensi" placeholder="cth: Gotong Royong"></label>
+      <label class="field"><span>Dimensi Profil Lulusan</span>
+        <select id="sDimensi">
+          <option value="">— Pilih Dimensi —</option>
+          <option>Keimanan dan Ketakwaan terhadap Tuhan YME</option>
+          <option>Kewargaan</option>
+          <option>Penalaran Kritis</option>
+          <option>Kreativitas</option>
+          <option>Kolaborasi</option>
+          <option>Kemandirian</option>
+          <option>Kesehatan</option>
+          <option>Komunikasi</option>
+        </select>
+      </label>
       <label class="field"><span>Deskripsi Kejadian *</span><textarea id="sDeskripsi" required></textarea></label>
       <label class="field"><span>Tindak Lanjut</span><textarea id="sTindakLanjut"></textarea></label>
       <button type="submit" class="btn btn-primary btn-block">SIMPAN CATATAN</button>
