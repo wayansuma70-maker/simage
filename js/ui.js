@@ -46,6 +46,7 @@ function skeleton(rows = 3) {
 function emptyState(text) { return `<div class="empty-state">${esc(text)}</div>`; }
 
 function openModal(html) {
+  closeModal(); // cegah modal menumpuk jika tombol "Tambah"/"Edit" sempat terklik 2x
   const back = document.createElement('div');
   back.className = 'modal-backdrop';
   back.id = 'activeModal';
@@ -57,6 +58,19 @@ function openModal(html) {
 function closeModal() { const m = document.getElementById('activeModal'); if (m) m.remove(); }
 
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/**
+ * Cegah form terkirim dua kali (klik ganda, tombol Enter berulang, koneksi lambat).
+ * Pakai di awal handler submit: if (formSudahDikirim(form)) return;
+ * Lalu panggil formSelesaiDikirim(form) hanya jika GAGAL (supaya bisa dicoba lagi).
+ * Jika BERHASIL, biasanya modal langsung ditutup jadi tidak perlu reset.
+ */
+function formSudahDikirim(form) {
+  if (form.dataset.busy === '1') return true;
+  form.dataset.busy = '1';
+  return false;
+}
+function formSelesaiDikirim(form) { form.dataset.busy = '0'; }
 
 // ------------------------------------------------------------
 // Cetak dengan kop surat sekolah (logo + nama + alamat + semester)

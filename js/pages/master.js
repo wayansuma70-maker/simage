@@ -151,12 +151,13 @@ function openMasterForm(entitas, data) {
   `);
   document.getElementById('masterForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (formSudahDikirim(e.target)) return;
     const fd = new FormData(e.target);
     const payload = {}; fd.forEach((v, k) => { if (v !== '') payload[k] = v; });
-    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'MENYIMPAN...';
     const res = await api('master.save', { entitas, id: data ? data[MASTER_KEY[entitas]] : '', data: payload });
     if (res.success) { showToast(res.message); closeModal(); Store.del(userKey('master:' + entitas)); route(); }
-    else { showToast(res.message, 'error'); btn.disabled = false; }
+    else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'SIMPAN'; formSelesaiDikirim(e.target); }
   });
 }
 
@@ -191,12 +192,13 @@ function openPenugasanForm(el, data) {
   `);
   document.getElementById('penugasanForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (formSudahDikirim(e.target)) return;
     const fd = new FormData(e.target);
     const payload = {}; fd.forEach((v, k) => payload[k] = v);
-    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'MENYIMPAN...';
     const res = await api('master.save', { entitas: 'penugasan', id: data ? data.ID_Tugas : '', data: payload });
     if (res.success) { showToast(res.message); closeModal(); loadPenugasan(el); }
-    else { showToast(res.message, 'error'); btn.disabled = false; }
+    else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'SIMPAN'; formSelesaiDikirim(e.target); }
   });
 }
 
@@ -224,14 +226,15 @@ async function openSiswaForm(el, data) {
   `);
   document.getElementById('siswaForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (formSudahDikirim(e.target)) return;
     const fd = new FormData(e.target);
     const payload = {}; fd.forEach((v, k) => { if (v !== '') payload[k] = v; });
     const kelas = kelasList.find(k => k.ID_Kelas === payload.ID_Kelas);
     if (kelas) { payload.Kelas = kelas.NamaKelas; payload.ID_WaliKelas = kelas.ID_WaliKelas || ''; }
-    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'MENYIMPAN...';
     const res = await api('master.save', { entitas: 'siswa', id: data ? data.ID_Siswa : '', data: payload });
     if (res.success) { showToast(res.message); closeModal(); Store.del(userKey('master:siswa')); route(); }
-    else { showToast(res.message, 'error'); btn.disabled = false; }
+    else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'SIMPAN'; formSelesaiDikirim(e.target); }
   });
 }
 
@@ -255,12 +258,13 @@ async function openKelasForm(el, data) {
   `);
   document.getElementById('kelasForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (formSudahDikirim(e.target)) return;
     const fd = new FormData(e.target);
     const payload = {}; fd.forEach((v, k) => payload[k] = v);
-    const btn = e.target.querySelector('button'); btn.disabled = true;
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'MENYIMPAN...';
     const res = await api('master.save', { entitas: 'kelas', id: data ? data.ID_Kelas : '', data: payload });
     if (res.success) { showToast(res.message); closeModal(); window._master_opsi_kelas = null; loadKelas(el); }
-    else { showToast(res.message, 'error'); btn.disabled = false; }
+    else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'SIMPAN'; formSelesaiDikirim(e.target); }
   });
 }
 

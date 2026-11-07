@@ -74,7 +74,8 @@ function openSikapForm() {
   `);
   document.getElementById('sikapForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button'); btn.disabled = true;
+    if (formSudahDikirim(e.target)) return;
+    const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'MENYIMPAN...';
     const res = await api('sikap.save', {
       tanggal: document.getElementById('sTanggal').value,
       idSiswa: document.getElementById('sSiswa').value,
@@ -83,6 +84,6 @@ function openSikapForm() {
       deskripsi: document.getElementById('sDeskripsi').value,
       tindakLanjut: document.getElementById('sTindakLanjut').value
     });
-    if (res.success) { showToast(res.message); closeModal(); route(); } else { showToast(res.message, 'error'); btn.disabled = false; }
+    if (res.success) { showToast(res.message); closeModal(); route(); } else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'SIMPAN CATATAN'; formSelesaiDikirim(e.target); }
   });
 }

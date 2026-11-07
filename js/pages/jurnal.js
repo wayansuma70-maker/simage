@@ -127,6 +127,7 @@ function openJurnalForm() {
   });
   document.getElementById('jurnalForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (formSudahDikirim(e.target)) return;
     const btn = e.target.querySelector('button');
     btn.disabled = true; btn.textContent = 'MENGIRIM...';
     const payload = {
@@ -142,12 +143,12 @@ function openJurnalForm() {
     if (fotoFile) {
       btn.textContent = 'MENGUNGGAH FOTO...';
       try { payload.fotoBase64 = await fileToBase64(fotoFile); payload.fotoNama = fotoFile.name.replace(/\.[^.]+$/, ''); }
-      catch (err) { showToast('Gagal membaca file foto.', 'error'); btn.disabled = false; btn.textContent = 'KIRIM UNTUK APPROVAL'; return; }
+      catch (err) { showToast('Gagal membaca file foto.', 'error'); btn.disabled = false; btn.textContent = 'KIRIM UNTUK APPROVAL'; formSelesaiDikirim(e.target); return; }
       btn.textContent = 'MENGIRIM...';
     }
     const res = await api('jurnal.save', payload);
     if (res.success) { showToast(res.message); closeModal(); route(); }
-    else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'KIRIM UNTUK APPROVAL'; }
+    else { showToast(res.message, 'error'); btn.disabled = false; btn.textContent = 'KIRIM UNTUK APPROVAL'; formSelesaiDikirim(e.target); }
   });
 }
 function fileToBase64(file) {
