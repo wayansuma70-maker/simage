@@ -27,7 +27,15 @@ function renderSikap(el, rows) {
       <div class="muted" style="margin:4px 0;">${esc(r.Kelas)} · ${fmtDate(r.Tanggal)} ${r.DimensiP5 ? '· Dimensi Profil Lulusan: ' + esc(r.DimensiP5) : ''}</div>
       <div>${esc(r.Deskripsi)}</div>
       ${r.TindakLanjut ? `<div class="muted" style="margin-top:6px;"><b>Tindak lanjut:</b> ${esc(r.TindakLanjut)}</div>` : ''}
+      ${['Admin', 'Kepsek', 'Wakasek'].includes(AppState.peran) || r.ID_Guru === AppState.guruId
+        ? `<div style="margin-top:8px;text-align:right;"><button class="btn btn-sm btn-danger" onclick="hapusSikap('${r.ID_Catatan}')">HAPUS</button></div>` : ''}
     </div>`).join('');
+}
+
+async function hapusSikap(id) {
+  if (!confirm('Hapus catatan sikap ini?')) return;
+  const res = await api('sikap.delete', { id });
+  if (res.success) { showToast(res.message); Store.del(userKey('sikap')); route(); } else showToast(res.message, 'error');
 }
 
 function openSikapForm() {

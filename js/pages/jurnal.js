@@ -46,7 +46,10 @@ function renderJurnalList(el, rows) {
         <td class="mono">${esc(j.JamKe)}</td>
         <td>${esc((j.Materi || '').slice(0, 50))} ${j.FotoURL ? '📷' : ''}</td>
         <td>${statusPill(j.StatusApproval)}</td>
-        <td>${isSup && j.StatusApproval === 'Menunggu Approval' ? `<button class="btn btn-sm" onclick="openJurnalApprove('${j.ID_Jurnal}')">PERIKSA</button>` : `<button class="btn btn-sm btn-ghost" onclick="openJurnalDetail('${j.ID_Jurnal}')">DETAIL</button>`}</td>
+        <td style="white-space:nowrap;">
+          ${isSup && j.StatusApproval === 'Menunggu Approval' ? `<button class="btn btn-sm" onclick="openJurnalApprove('${j.ID_Jurnal}')">PERIKSA</button>` : `<button class="btn btn-sm btn-ghost" onclick="openJurnalDetail('${j.ID_Jurnal}')">DETAIL</button>`}
+          ${isSup || j.ID_Guru === AppState.guruId ? `<button class="btn btn-sm btn-danger" onclick="hapusJurnal('${j.ID_Jurnal}')">HAPUS</button>` : ''}
+        </td>
       </tr>`).join('')}
     </tbody></table></div>`;
   window._jurnalCache = rows;
@@ -155,6 +158,12 @@ function fileToBase64(file) {
     reader.readAsDataURL(file);
   });
 }
+async function hapusJurnal(id) {
+  if (!confirm('Hapus jurnal ini? Catatan absensi/nilai yang sudah tersimpan terpisah tidak ikut terhapus.')) return;
+  const res = await api('jurnal.delete', { id });
+  if (res.success) { showToast(res.message); Store.del(userKey('jurnal:')); route(); } else showToast(res.message, 'error');
+}
+
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
 function cetakJurnal() {

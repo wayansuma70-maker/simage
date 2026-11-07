@@ -101,7 +101,10 @@ function renderMasterTable(el, entitas, q) {
       <th>ID</th>${cols.map(c => `<th>${c}</th>`).join('')}<th></th>
     </tr></thead><tbody>
       ${rows.map(r => `<tr><td class="mono">${esc(r[MASTER_KEY[entitas]])}</td>${cols.map(c => `<td>${esc(r[c])}</td>`).join('')}
-        <td><button class="btn btn-sm" onclick='${entitas === "penugasan" ? `openPenugasanForm(document.querySelector(".page[data-page=master]"), ${JSON.stringify(r).replace(/'/g, "&#39;")})` : `openMasterForm("${entitas}", ${JSON.stringify(r).replace(/'/g, "&#39;")})`}'>EDIT</button></td></tr>`).join('')}
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm" onclick='${entitas === "penugasan" ? `openPenugasanForm(document.querySelector(".page[data-page=master]"), ${JSON.stringify(r).replace(/'/g, "&#39;")})` : `openMasterForm("${entitas}", ${JSON.stringify(r).replace(/'/g, "&#39;")})`}'>EDIT</button>
+          <button class="btn btn-sm btn-danger" onclick="hapusMaster('${entitas}','${r[MASTER_KEY[entitas]]}')">HAPUS</button>
+        </td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
 
@@ -130,6 +133,16 @@ function openMasterForm(entitas, data) {
     if (res.success) { showToast(res.message); closeModal(); Store.del(userKey('master:' + entitas)); route(); }
     else { showToast(res.message, 'error'); btn.disabled = false; }
   });
+}
+
+async function hapusMaster(entitas, id) {
+  if (!confirm('Hapus data "' + id + '" ini? Tindakan tidak dapat dibatalkan.')) return;
+  const res = await api('master.delete', { entitas, id });
+  if (res.success) {
+    showToast(res.message);
+    Store.del(userKey('master:' + entitas));
+    route();
+  } else showToast(res.message, 'error');
 }
 
 // ------------------------------------------------------------
