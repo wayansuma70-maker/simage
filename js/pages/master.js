@@ -21,6 +21,10 @@ registerPage('master', {
       <button class="btn" id="masterImportBtn">⬆ IMPOR EXCEL/CSV</button>
       <button class="btn btn-primary" id="masterTambahBtn">+ TAMBAH</button>
     </div>
+    <div class="toolbar" id="masterBulkBar" style="display:none;background:var(--error-bg);border:1px solid var(--error);border-radius:12px;padding:10px 14px;">
+      <span class="label-sm" id="masterBulkCount" style="color:var(--error);"></span>
+      <button class="btn btn-danger btn-sm" id="masterBulkDeleteBtn" style="margin-left:auto;">🗑 HAPUS YANG DIPILIH</button>
+    </div>
     <div id="masterBody">${skeleton(6)}</div>
     <input type="file" id="masterFile" accept=".csv,.xlsx,.xls" hidden>
   `,
@@ -38,6 +42,7 @@ registerPage('master', {
     el.querySelector('#masterUnduhFormat').addEventListener('click', () => unduhFormatTemplate(entitas));
     el.querySelector('#masterImportBtn').addEventListener('click', () => el.querySelector('#masterFile').click());
     el.querySelector('#masterFile').addEventListener('change', (e) => handleFileImport(e, entitas, load));
+    el.querySelector('#masterBulkDeleteBtn').addEventListener('click', () => hapusMasterBulk(el, entitas, load));
     load();
   }
 });
@@ -62,6 +67,7 @@ const MASTER_CONTOH = {
 
 function loadMaster(el, entitas) {
   el.querySelector('#masterBody').innerHTML = skeleton(6);
+  el.querySelector('#masterBulkBar').style.display = 'none';
   const isPenugasan = entitas === 'penugasan';
   el.querySelector('#masterUnduhFormat').style.display = isPenugasan ? 'none' : '';
   el.querySelector('#masterImportBtn').style.display = isPenugasan ? 'none' : '';
@@ -123,14 +129,40 @@ function renderMasterTable(el, entitas, q) {
   }
   const cols = MASTER_FIELDS[entitas].map(f => f[0]);
   el.querySelector('#masterBody').innerHTML = `<div class="card"><div class="table-wrap"><table><thead><tr>
+      <th><input type="checkbox" id="masterCheckAll"></th>
       <th>ID</th>${cols.map(c => `<th>${c}</th>`).join('')}<th></th>
     </tr></thead><tbody>
-      ${rows.map(r => `<tr><td class="mono">${esc(r[MASTER_KEY[entitas]])}</td>${cols.map(c => `<td>${esc(r[c])}</td>`).join('')}
+      ${rows.map(r => `<tr><td><input type="checkbox" class="masterRowChk" value="${esc(r[MASTER_KEY[entitas]])}"></td><td class="mono">${esc(r[MASTER_KEY[entitas]])}</td>${cols.map(c => `<td>${esc(r[c])}</td>`).join('')}
         <td style="white-space:nowrap;">
           <button class="btn btn-sm" onclick='${formOpenerCall_(entitas, r)}'>EDIT</button>
           <button class="btn btn-sm btn-danger" onclick="hapusMaster('${entitas}','${r[MASTER_KEY[entitas]]}')">HAPUS</button>
         </td></tr>`).join('')}
     </tbody></table></div></div>`;
+
+  const bar = el.querySelector('#masterBulkBar');
+  el.querySelector('#masterCheckAll').addEventListener('change', (e) => {
+    el.querySelectorAll('.masterRowChk').forEach(c => c.checked = e.target.checked);
+    perbaruiBarHapusMassal_(el);
+  });
+  el.querySelectorAll('.masterRowChk').forEach(c => c.addEventListener('change', () => perbaruiBarHapusMassal_(el)));
+}
+
+function perbaruiBarHapusMassal_(el) {
+  const n = el.querySelectorAll('.masterRowChk:checked').length;
+  const bar = el.querySelector('#masterBulkBar');
+  bar.style.display = n ? 'flex' : 'none';
+  if (n) el.querySelector('#masterBulkCount').textContent = n + ' DATA DIPILIH';
+}
+
+async function hapusMasterBulk(el, entitas, onDone) {
+  const ids = [...el.querySelectorAll('.masterRowChk:checked')].map(c => c.value);
+  if (!ids.length) return;
+  if (!confirm(`Hapus ${ids.length} data ${MASTER_LABEL[entitas]} sekaligus? Tindakan tidak dapat dibatalkan.`)) return;
+  const btn = el.querySelector('#masterBulkDeleteBtn'); btn.disabled = true; btn.textContent = 'MENGHAPUS...';
+  const res = await api('master.deleteBulk', { entitas, ids });
+  btn.disabled = false; btn.textContent = '🗑 HAPUS YANG DIPILIH';
+  if (res.success) { showToast(res.message); Store.del(userKey('master:' + entitas)); onDone(); }
+  else showToast(res.message, 'error');
 }
 
 function openMasterForm(entitas, data) {

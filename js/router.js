@@ -7,24 +7,24 @@ function registerPage(name, def) { Pages[name] = Object.assign({ roles: null, ti
 
 const NAV_MENU = [
   { group: 'MENU', items: [
-    { page: 'beranda', label: 'Beranda', icon: '▦' },
-    { page: 'jurnal', label: 'Jurnal KBM', icon: '▤' },
-    { page: 'absensi', label: 'Absensi', icon: '☑' },
-    { page: 'nilai', label: 'Nilai', icon: '✎' },
-    { page: 'sikap', label: 'Catatan Sikap', icon: '◈' },
-    { page: 'laporan', label: 'Laporan', icon: '▥' }
+    { page: 'beranda', label: 'Beranda', icon: '🏠' },
+    { page: 'jurnal', label: 'Jurnal KBM', icon: '📘' },
+    { page: 'absensi', label: 'Absensi', icon: '✅' },
+    { page: 'nilai', label: 'Nilai', icon: '📝' },
+    { page: 'sikap', label: 'Catatan Sikap', icon: '💬' },
+    { page: 'laporan', label: 'Laporan', icon: '📊' }
   ]},
   { group: 'ADMINISTRASI', items: [
-    { page: 'master', label: 'Data Master', icon: '⌂', roles: ['Admin'] },
-    { page: 'log', label: 'Log Aktivitas', icon: '≡', roles: ['Admin', 'Kepsek', 'Wakasek'] }
+    { page: 'master', label: 'Data Master', icon: '🗂️', roles: ['Admin'] },
+    { page: 'log', label: 'Log Aktivitas', icon: '🧾', roles: ['Admin', 'Kepsek', 'Wakasek'] }
   ]},
   { group: 'KOMUNIKASI', items: [
-    { page: 'notifikasi', label: 'WhatsApp & Notifikasi', icon: '✆', roles: ['Admin', 'Kepsek', 'Wakasek'] },
-    { page: 'crm', label: 'CRM Kontak', icon: '☍', roles: ['Admin', 'Kepsek', 'Wakasek'] }
+    { page: 'notifikasi', label: 'WhatsApp & Notifikasi', icon: '📲', roles: ['Admin', 'Kepsek', 'Wakasek'] },
+    { page: 'crm', label: 'CRM Kontak', icon: '👥', roles: ['Admin', 'Kepsek', 'Wakasek'] }
   ]},
   { group: 'SISTEM', items: [
-    { page: 'pengaturan', label: 'Pengaturan Sekolah', icon: '⚙', roles: ['Admin'] },
-    { page: 'migrasi', label: 'Migrasi Data Lama', icon: '⇄', roles: ['Admin'] }
+    { page: 'pengaturan', label: 'Pengaturan Sekolah', icon: '⚙️', roles: ['Admin'] },
+    { page: 'migrasi', label: 'Migrasi Data Lama', icon: '🔄', roles: ['Admin'] }
   ]}
 ];
 

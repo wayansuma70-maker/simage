@@ -84,8 +84,25 @@ function initGoogleSignIn() {
   google.accounts.id.renderButton(document.getElementById('googleBtn'), { theme: 'outline', size: 'large', shape: 'pill', width: 320, text: 'signin_with' });
 }
 
+function modeSaatIni_() {
+  return document.documentElement.getAttribute('data-theme')
+    || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function terapkanIkonTema_(mode) {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = mode === 'dark' ? '☀️' : '🌙';
+}
+function toggleTema() {
+  const mode = modeSaatIni_() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', mode);
+  localStorage.setItem(LS_PREFIX + 'theme', mode);
+  terapkanIkonTema_(mode);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   warmUpServer();
+  terapkanIkonTema_(modeSaatIni_());
+  document.getElementById('themeToggleBtn').addEventListener('click', toggleTema);
   setTimeout(initGoogleSignIn, 300); // beri waktu skrip Google Identity Services selesai dimuat
 
   document.getElementById('loginForm').addEventListener('submit', (e) => {
