@@ -39,8 +39,8 @@ registerPage('master', {
     }));
     el.querySelector('#masterSearch').addEventListener('input', debounce(() => renderMasterTable(el, entitas, el.querySelector('#masterSearch').value), 250));
     el.querySelector('#masterTambahBtn').addEventListener('click', () => bukaFormTambah_(el, entitas));
-    el.querySelector('#masterUnduhFormat').addEventListener('click', () => unduhFormatTemplate(entitas));
-    el.querySelector('#masterImportBtn').addEventListener('click', () => el.querySelector('#masterFile').click());
+    el.querySelector('#masterUnduhFormat').addEventListener('click', () => entitas === 'siswa' ? unduhFormatSiswa_() : unduhFormatTemplate(entitas));
+    el.querySelector('#masterImportBtn').addEventListener('click', () => entitas === 'siswa' ? bukaImporSiswa_(el) : el.querySelector('#masterFile').click());
     el.querySelector('#masterFile').addEventListener('change', (e) => handleFileImport(e, entitas, load));
     el.querySelector('#masterBulkDeleteBtn').addEventListener('click', () => hapusMasterBulk(el, entitas, load));
     load();
@@ -135,7 +135,7 @@ function renderMasterTable(el, entitas, q) {
       ${rows.map(r => `<tr><td><input type="checkbox" class="masterRowChk" value="${esc(r[MASTER_KEY[entitas]])}"></td><td class="mono">${esc(r[MASTER_KEY[entitas]])}</td>${cols.map(c => `<td>${esc(r[c])}</td>`).join('')}
         <td style="white-space:nowrap;">
           <button class="btn btn-sm" onclick='${formOpenerCall_(entitas, r)}'>EDIT</button>
-          <button class="btn btn-sm btn-danger" onclick="hapusMaster('${entitas}','${r[MASTER_KEY[entitas]]}')">HAPUS</button>
+          <button class="btn btn-sm btn-danger" onclick="hapusMaster('${entitas}','${r[MASTER_KEY[entitas]]}', this)">HAPUS</button>
         </td></tr>`).join('')}
     </tbody></table></div></div>`;
 
@@ -193,14 +193,16 @@ function openMasterForm(entitas, data) {
   });
 }
 
-async function hapusMaster(entitas, id) {
+async function hapusMaster(entitas, id, btn) {
+  if (btn && btn.disabled) return; // sudah diproses, abaikan klik berikutnya
   if (!confirm('Hapus data "' + id + '" ini? Tindakan tidak dapat dibatalkan.')) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'MENGHAPUS...'; }
   const res = await api('master.delete', { entitas, id });
   if (res.success) {
     showToast(res.message);
     Store.del(userKey('master:' + entitas));
     route();
-  } else showToast(res.message, 'error');
+  } else { showToast(res.message, 'error'); if (btn) { btn.disabled = false; btn.textContent = 'HAPUS'; } }
 }
 
 // ------------------------------------------------------------
@@ -301,6 +303,54 @@ async function openKelasForm(el, data) {
 }
 
 // ------------------------------------------------------------
+// Impor Siswa KHUSUS PER KELAS — kelas tujuan dipilih di aplikasi,
+// bukan ditulis di dalam file, supaya data antar kelas tidak tercampur.
+// ------------------------------------------------------------
+function unduhFormatSiswa_() {
+  if (!window.XLSX) { showToast('Pustaka Excel belum termuat, coba lagi sesaat.', 'error'); return; }
+  const cols = ['Nama', 'NIS', 'JenisKelamin', 'NoHPWali', 'EmailWali'];
+  const contoh = ['Ahmad Fauzan', '0078219921', 'L', '081300000001', 'wali@email.com'];
+  const wsKeterangan = XLSX.utils.aoa_to_sheet([
+    ['PETUNJUK PENGISIAN — SISWA (PER KELAS)'],
+    [''],
+    ['1. Satu file = isi siswa untuk SATU kelas saja. Kelas tujuan dipilih di aplikasi saat mengunggah, BUKAN ditulis di file ini.'],
+    ['2. Jangan ubah nama header di baris pertama sheet "Data".'],
+    ['3. Baris ke-2 adalah CONTOH — boleh dihapus/ditimpa.'],
+    ['4. Kolom ID diisi otomatis oleh sistem.'],
+    ['5. NIS yang sudah terdaftar di sistem akan otomatis DILEWATI saat diimpor ulang — aman dari data dobel.']
+  ]);
+  wsKeterangan['!cols'] = [{ wch: 72 }];
+  const wsData = XLSX.utils.aoa_to_sheet([cols, contoh]);
+  wsData['!cols'] = cols.map(() => ({ wch: 20 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, wsKeterangan, 'Petunjuk');
+  XLSX.utils.book_append_sheet(wb, wsData, 'Data');
+  XLSX.writeFile(wb, 'Format_Siswa_PerKelas_JurnalGuru.xlsx');
+}
+
+async function bukaImporSiswa_(el) {
+  if (_masterImportBusy) return;
+  const r = await api('master.list', { entitas: 'kelas' });
+  const kelasList = r.success ? r.data : [];
+  if (!kelasList.length) { showToast('Buat data Kelas dulu di tab "Kelas" sebelum impor siswa.', 'error'); return; }
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>Impor Siswa — Pilih Kelas Tujuan</h3>
+    <p class="muted">Semua siswa di dalam file yang akan diunggah akan masuk ke kelas ini. Satu kali impor = satu kelas, supaya data tidak tercampur.</p>
+    <form id="importKelasForm" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+      <label class="field"><span>Kelas Tujuan *</span><select name="kelas" required>${selectOptions(kelasList, 'ID_Kelas', 'NamaKelas', '')}</select></label>
+      <button type="submit" class="btn btn-primary btn-block">LANJUT PILIH FILE</button>
+    </form>
+  `);
+  document.getElementById('importKelasForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    window._importTargetKelasId = new FormData(e.target).get('kelas');
+    closeModal();
+    el.querySelector('#masterFile').click();
+  });
+}
+
+// ------------------------------------------------------------
 // Unduh Format Template (.xlsx) — berisi header kolom + 1 baris contoh
 // ------------------------------------------------------------
 function unduhFormatTemplate(entitas) {
@@ -372,9 +422,25 @@ function importFromCsv_(file, entitas, onDone, inputEl) {
   reader.readAsText(file);
 }
 
+let _masterImportBusy = false;
 async function konfirmasiDanImpor_(entitas, rows, onDone, inputEl) {
-  if (!confirm(`Impor ${rows.length} baris ke data ${MASTER_LABEL[entitas]}?`)) { inputEl.value = ''; return; }
-  const res = await api('master.importCsv', { entitas, rows });
-  if (res.success) { showToast(res.message); onDone(); } else showToast(res.message, 'error');
-  inputEl.value = '';
+  if (_masterImportBusy) { inputEl.value = ''; return; } // sudah ada proses impor berjalan, abaikan
+  const targetKelasId = entitas === 'siswa' ? window._importTargetKelasId : null;
+  const labelTujuan = targetKelasId ? ' ke kelas terpilih' : '';
+  if (!confirm(`Impor ${rows.length} baris ke data ${MASTER_LABEL[entitas]}${labelTujuan}?`)) { inputEl.value = ''; return; }
+
+  _masterImportBusy = true;
+  const importBtn = document.getElementById('masterImportBtn');
+  if (importBtn) { importBtn.disabled = true; importBtn.textContent = 'MENGIMPOR...'; }
+  try {
+    const payload = { entitas, rows };
+    if (targetKelasId) payload.targetKelasId = targetKelasId;
+    const res = await api('master.importCsv', payload);
+    if (res.success) { showToast(res.message); onDone(); } else showToast(res.message, 'error');
+  } finally {
+    _masterImportBusy = false;
+    if (importBtn) { importBtn.disabled = false; importBtn.textContent = '⬆ IMPOR EXCEL/CSV'; }
+    inputEl.value = '';
+    window._importTargetKelasId = null;
+  }
 }
